@@ -3,11 +3,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Iterator;
+import java.util.TreeMap;
+
 import edu.neumont.io.*;
 
 public class HuffmanTree 
 {
-	private Node treeRoot;
+	public Node treeRoot;
 	private int messageLength;
 	
 	private static class Node implements Comparable<Node>
@@ -16,7 +18,10 @@ public class HuffmanTree
 		public int frequency;
 		public Node left;
 		public Node right;
-		public boolean isLeafNode;
+		
+		public String toString() {
+			return data+"("+frequency+")";
+		}
 		
 		public Node(byte nodeData, int dataFrequency)
 		{
@@ -36,7 +41,7 @@ public class HuffmanTree
 		@Override
 		public int compareTo(Node o) 
 		{
-			return new Integer(this.frequency).compareTo( new Integer(o.frequency) );
+			return new Integer(this.frequency).compareTo(o.frequency);
 		}
 	}
 	
@@ -45,7 +50,7 @@ public class HuffmanTree
 	{
 		messageLength = byteArray.length;
 		
-		HashMap<Byte, Integer> freqDistribution = new HashMap<Byte, Integer>();
+		Map<Byte, Integer> freqDistribution = new TreeMap<Byte, Integer>();
 		
 		for(byte b : byteArray)
 		{
@@ -63,8 +68,25 @@ public class HuffmanTree
 		createFinalTree(nodeQueue);
 	}
 	
+	//For when a frequency chart ordered from -128 to 127 is available for a compressed file
+	public HuffmanTree(int[] frequencyArray)
+	{
+		Map<Byte, Integer> freqDistribution = new TreeMap<Byte, Integer>();
+		byte number = -128;
+		
+		int s = frequencyArray.length;
+		for(int i = 0; i < s; i++)
+		{
+			freqDistribution.put(number, frequencyArray[i]);
+			number++;
+		}
+		
+		PriorityQueue<Node> nodeQueue = createDistribution(freqDistribution);
+		createFinalTree(nodeQueue);
+	}
 	
-	private PriorityQueue<Node> createDistribution(HashMap<Byte, Integer> freqDistribution)
+	
+	private PriorityQueue<Node> createDistribution(Map<Byte, Integer> freqDistribution)
 	{
 		int initSize = freqDistribution.size();
 		PriorityQueue<Node> distribution = new PriorityQueue<Node>(initSize);
@@ -75,7 +97,7 @@ public class HuffmanTree
 			byte byteData = keys.next();
 			int frequency = freqDistribution.get(byteData);
 			Node newNode = new Node(byteData, frequency);
-			distribution.add(newNode);
+			distribution.offer(newNode);
 		}
 		
 		return distribution;
@@ -88,7 +110,7 @@ public class HuffmanTree
 			Node leftNode = distribution.poll();
 			Node rightNode = distribution.poll();
 			int compositeFreq = leftNode.frequency + rightNode.frequency;
-			Node compositeNode = new Node((byte)(-1), compositeFreq, leftNode, rightNode);
+			Node compositeNode = new Node((byte)(0), compositeFreq, leftNode, rightNode);
 			distribution.offer(compositeNode);
 		}
 		treeRoot = distribution.peek();

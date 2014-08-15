@@ -1,5 +1,4 @@
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import edu.neumont.io.Bits;
@@ -35,15 +34,19 @@ public class HuffmanCompressor
 			bitPaddingCount++;
 		}
 		
-		String binaryData = "";
 		int compressedBitsSize = compressedBits.size();
-		for(int i = 0; i < compressedBitsSize; i++)
+		byte[] compressedByte = new byte[compressedBitsSize/8];
+		for(int i = 0; i < compressedBitsSize/8; i++)
 		{
-			Boolean binaryIsTrue = compressedBits.poll().booleanValue();
-			binaryData += (binaryIsTrue) ? "1" : "0";
+			for(int j = 7; j >= 0; j--)
+			{
+				boolean binaryIsTrue = compressedBits.poll();
+				if(binaryIsTrue)
+				{
+					compressedByte[i] += 1 << j;
+				}
+			}
 		}
-		
-		byte[] compressedByte = new BigInteger(binaryData, 2).toByteArray();
 		
 		return compressedByte;
 	}
@@ -51,16 +54,20 @@ public class HuffmanCompressor
 	
 	public byte[] decompress(HuffmanTree tree, int uncompressedLength, byte[] b)
 	{
-		BigInteger byteData = new BigInteger(b);
-		String binaryData = byteData.toString(2);
-		
-		Bits decompressedBits = new Bits();
-		int binaryStringLength = binaryData.length();
-		for(int i = 0; i < binaryStringLength; i++)
+	    Bits decompressedBits = new Bits();
+		for(int i = 0; i < b.length; i++)
 		{
-			int bit = Integer.parseInt(binaryData.substring(i, i+1));
-			boolean binary = (bit == 1) ? true : false;
-			decompressedBits.offerLast(binary);
+			for(int j = 7; j >= 0; j--)
+			{
+				if(((b[i] >> j) & 1) == 1)
+				{
+					decompressedBits.offerLast(true);
+				}
+				else
+				{
+					decompressedBits.offerLast(false);
+				}
+			}
 		}
 		
 		byte[] decompressedBytes = new byte[uncompressedLength];
